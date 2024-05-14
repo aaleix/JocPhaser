@@ -1,0 +1,927 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8" />
+    <title>Snake Knight</title>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+var vides=3;
+var player;
+var snake;
+var snake2;
+var snake3;
+var snakeSpeed=-75;
+var snakeSpeed2=-75;
+var snakeSpeed3=-75;
+var snakeSpeed4=-75;
+var snakeSpeed5=-75;
+var stars;
+var platforms;
+var cursors;
+var score = 0;
+var gameOver = false;
+var scoreText;
+var videsText;
+var tempsText;
+var temps = 45;
+var serpientesVivas = 0;
+var cor;
+
+var escena1 = new Phaser.Class({
+
+Extends: Phaser.Scene,
+initialize: function() {
+      Phaser.Scene.call(this, { "key": "escena1" });
+},
+init: function() {},
+preload :function(){
+    this.load.image('sky', 'assets/fondocastell.webp');
+    this.load.image('ground', 'assets/plataformapedra.png');
+    this.load.image('alfombra', 'assets/alfombraroja.png');
+    this.load.image('star', 'assets/star.png');
+    this.load.image('porta','assets/portaoberta.png')
+    this.load.spritesheet('dudeidle', 'assets/caballerodescansa.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('dude', 'assets/caballeroanda.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('dudejump', 'assets/caballerosalta.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('dudedie', 'assets/caballeromort.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('dudefight', 'assets/caballeropega.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('snake', 'assets/serpcamina.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('cor', 'assets/cor.png', { frameWidth: 16, frameHeight: 16 });
+
+},
+
+create: function()
+{
+    this.cameras.main.setZoom(1.5); // Establece el zoom al 80% de su tamaño original
+
+    //  A simple background for our game
+    this.add.image(900, 380, 'sky');
+    porta = this.physics.add.sprite(1620, 210, 'porta');
+    porta.setCollideWorldBounds(true);
+    next = () => {
+             this.scene.start('escena2');
+         }
+
+
+    //  The platforms group contains the ground and the 2 ledges we can jump on
+    platforms = this.physics.add.staticGroup();
+
+    //  Here we create the ground.
+    //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
+    // Crea la plataforma y establece su tamaño y posición
+    var platform = platforms.create(900, 630, 'alfombra').setScale(5).refreshBody();
+    // Ajusta el ancho de la plataforma para que cubra toda la pantalla
+    platform.body.width = 2100;
+
+// Ajusta el seguimiento de la cámara para que siga al jugador con un retraso y un borde suave
+
+
+
+    //  Now let's create some ledges
+    platforms.create(300, 400, 'ground');
+    platforms.create(50, 150, 'ground');
+    platforms.create(500, 250, 'ground');
+    platforms.create(1500, 390, 'ground');
+    platforms.create(1120, 230, 'ground');
+
+
+    // The player and its settings
+    player = this.physics.add.sprite(100, 450, 'dude');
+    snake = this.physics.add.sprite(600, 400, 'snake');
+    snake2 = this.physics.add.sprite(600, 100, 'snake');
+    snake3 = this.physics.add.sprite(1400, 150, 'snake');
+    cor = this.physics.add.sprite(1100, 150, 'cor');
+
+// Dentro de tu función create() donde creas el personaje (por ejemplo, player)
+// Ajusta el seguimiento de la cámara para que siga al jugador
+// Establece los límites de la cámara para que no se salga de los bordes del mundo del juego
+
+    // Ajusta el seguimiento de la cámara para que siga al jugador dentro de los límites establecidos
+    //  Player physics properties. Give the little guy a slight bounce.
+    player.body.setSize(20, 55);
+    player.body.setOffset(12, 7);
+    player.setBounce(0.2);
+    player.setCollideWorldBounds(true);
+
+
+
+    snake.body.setSize(20, 35);
+    snake.body.setOffset(5, 30);
+    snake.setBounce(0.2);
+    snake.setCollideWorldBounds(true);
+
+    snake2.body.setSize(20, 35);
+    snake2.body.setOffset(5, 30);
+    snake2.setBounce(0.2);
+    snake2.setCollideWorldBounds(true);
+
+    snake3.body.setSize(20, 35);
+    snake3.body.setOffset(5, 30);
+    snake3.setBounce(0.2);
+    snake3.setCollideWorldBounds(true);
+
+    cor.body.setSize(20, 20);
+    cor.body.setOffset(5, 20);
+    cor.setCollideWorldBounds(true);
+    
+    //  Our player animations, turning, walking left and walking right.
+    this.anims.create({
+        key: 'left',
+        frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 2 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'turn',
+        frames: [ { key: 'dude', frame: 4 } ],
+        frameRate: 20
+    });
+
+    this.anims.create({
+        key: 'right',
+        frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 2 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'dudefight',
+        frames: this.anims.generateFrameNumbers('dudefight', { start: 0, end: 4 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'dudeidle',
+        frames: this.anims.generateFrameNumbers('dudeidle', { start: 0, end: 7 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'dudejump',
+        frames: this.anims.generateFrameNumbers('dudejump', { start: 0, end: 4 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'dudedie',
+        frames: this.anims.generateFrameNumbers('dudedie', { start: 0, end: 7 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'snakewalk',
+        frames: this.anims.generateFrameNumbers('snake', {start: 0, end: 6}),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'cor',
+        frames: this.anims.generateFrameNumbers('cor', {start: 0, end: 4}),
+        frameRate: 5,
+        repeat: -1
+    });
+
+
+    //  Input Events
+    cursors = this.input.keyboard.createCursorKeys();
+
+    //  Some stars to collect, 12 in total, evenly spaced 70 pixels apart along the x axis
+    stars = this.physics.add.group({
+        key: 'star',
+        repeat: 21,
+        setXY: { x: 12, y: 0, stepX: 70 }
+    });
+
+    stars.children.iterate(function (child) {
+
+        //  Give each star a slightly different bounce
+        child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
+
+    });
+
+    //  The score
+    // Crear el texto del marcador de puntuación (scoreText) y de las vidas (videsText)
+    scoreText = this.add.text(16, 16, 'Punts: 0', { fontSize: '32px', fill: '#f70505' });
+    videsText = this.add.text(this.cameras.main.width - 200, 16, 'Vides: 3', { fontSize: '32px', fill: '#f70505' });
+
+    // Asignar el desplazamiento de estos textos para que se muevan con la cámara
+    scoreText.setScrollFactor(0);
+    videsText.setScrollFactor(0);
+
+    //  Collide the player and the stars with the platforms
+    this.physics.add.collider(player, platforms);
+    this.physics.add.collider(snake, platforms);
+    this.physics.add.collider(stars, platforms);
+    this.physics.add.collider(snake2, platforms);
+    this.physics.add.collider(snake3, platforms);
+    this.physics.add.collider(cor, platforms);
+    this.physics.add.overlap(player, porta, next, null, this);
+    this.physics.add.collider(porta, platforms);
+
+
+
+
+    //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
+    this.physics.add.overlap(player, stars, this.collectStar, null, this);
+
+    this.physics.add.overlap(player, cor, this.collectCor, null, this);
+
+    this.physics.add.collider(player, snake, this.hitPlayer, null, this);
+
+    this.physics.add.collider(player, snake2, this.hitPlayer, null, this);
+
+    this.physics.add.collider(player, snake3, this.hitPlayer, null, this);
+
+        // set bounds so the camera won't go outside the game world
+        this.cameras.main.setBounds(0, 0, game.widthInPixels, game.heightInPixels);        // make the camera follow the player
+        this.cameras.main.startFollow(player, true, 0.5, 0.5, 0, 100);
+
+        // set background color, so the sky is not black
+
+},
+
+update: function()
+{
+
+
+    scoreText.x = 320;
+    scoreText.y = 100;
+
+    // VidesText en la parte superior derecha
+    videsText.x = 1380;
+    videsText.y = 100;
+
+    if(player.x>=1240){
+        this.cameras.main.stopFollow(player.x, true);
+        // Dentro de la función update() o donde desees controlar la cámara
+// Dentro de la función update() o donde desees controlar la cámara
+const cameraCenterX = 1240; // Mantén la posición horizontal actual de la cámara
+const cameraCenterY = player.y - 100; // Sigue al jugador verticalmente
+
+// Ajusta la posición de la cámara solo en el eje Y
+this.cameras.main.scrollY = cameraCenterY - this.cameras.main.height / 2;
+        
+    }else{
+        this.cameras.main.startFollow(player, true, 0.5, 0.5, 0, 100);
+    }
+
+    if (gameOver) {
+    return; // Salir de la función update() después de reproducir la animación 'dudedie'
+}
+
+
+// Manejo de la animación del jugador basado en las teclas presionadas
+
+if (cursors.left.isDown) {
+        player.setVelocityX(-160);
+        player.anims.play('left', true);
+        player.setFlipX(true); // Girar el jugador hacia la izquierda
+    } else if (cursors.right.isDown) {
+        player.setVelocityX(160);
+        player.anims.play('right', true);
+        player.setFlipX(false); // No girar el jugador (mirando hacia la derecha)
+    } 
+// Iniciar la animación de ataque si se presiona la tecla de espacio
+else if (cursors.space.isDown) {
+    player.anims.play('dudefight', true);
+} 
+else {
+    player.setVelocityX(0);
+
+    // Si ninguna tecla de dirección horizontal está presionada y el jugador no está en movimiento vertical, reproducir la animación de inactividad
+    if (!player.body.touching.down) {
+        player.anims.play('turn');
+    } else {
+        player.anims.play('dudeidle', true);
+        cor.anims.play('cor',true);
+        
+    }
+}
+
+// Saltar si se presiona la tecla de dirección hacia arriba y el jugador está en el suelo
+if (cursors.up.isDown && player.body.touching.down) {
+    player.setVelocityY(-450);
+    player.anims.play('dudejump', true);
+}
+
+
+snake.setVelocityX(snakeSpeed);
+snake.anims.play('snakewalk',true);
+if ((snake.body.blocked.left && snakeSpeed < 0) || (snake.body.blocked.right && snakeSpeed > 0)) {
+    snakeSpeed = -snakeSpeed;
+    
+    snake.setFlipX(!snake.flipX);
+
+}
+
+snake2.setVelocityX(snakeSpeed2);
+snake2.anims.play('snakewalk',true);
+// Define el punto de giro de la serpiente en el eje X
+
+// Verifica si la serpiente ha alcanzado el punto de giro en el eje X
+if (snake2.x >= 680 && snakeSpeed2 > 0) {
+    // Invierte la velocidad de la serpiente en el eje X
+    snakeSpeed2 = -snakeSpeed2;
+
+    // Voltea la animación de la serpiente horizontalmente para que parezca que está girando
+    snake2.setFlipX(!snake2.flipX);
+} else if (snake2.x <= 305 && snakeSpeed2 < 0) {
+    // Invierte la velocidad de la serpiente en el eje X
+    snakeSpeed2 = -snakeSpeed2;
+
+    // Voltea la animación de la serpiente horizontalmente para que parezca que está girando
+    snake2.setFlipX(!snake2.flipX);
+}
+
+snake3.setVelocityX(snakeSpeed3);
+snake3.anims.play('snakewalk',true);
+// Define el punto de giro de la serpiente en el eje X
+
+// Verifica si la serpiente ha alcanzado el punto de giro en el eje X
+if (snake3.x >= 1700 && snakeSpeed3 > 0) {
+    // Invierte la velocidad de la serpiente en el eje X
+    snakeSpeed3 = -snakeSpeed3;
+
+    // Voltea la animación de la serpiente horizontalmente para que parezca que está girando
+    snake3.setFlipX(!snake3.flipX);
+} else if (snake3.x <= 1305 && snakeSpeed3 < 0) {
+    // Invierte la velocidad de la serpiente en el eje X
+    snakeSpeed3 = -snakeSpeed3;
+
+    // Voltea la animación de la serpiente horizontalmente para que parezca que está girando
+    snake3.setFlipX(!snake3.flipX);
+}
+
+
+
+    
+
+},
+
+collectStar:function(player, star)
+{
+    star.disableBody(true, true);
+
+    //  Add and update the score
+    score += 10;
+    scoreText.setText('Punts: ' + score);
+
+
+    
+},
+
+collectCor: function(player, star)
+{
+    cor.disableBody(true, true);
+
+    //  Add and update the score
+    vides+=1;
+    videsText.setText('Vides: ' + vides);
+
+},
+
+
+hitPlayer:function(player, snake) {
+    if (player.y < snake.y) {
+        
+        // Desactivar el cuerpo del demonio después de un breve retraso
+        this.time.delayedCall(200, function() {
+            snake.disableBody(true, true);
+        }, [], this);
+
+        // Realizar un mini salto al eliminar al demonio
+        player.setVelocityY(-200); // Ajustar según la altura del mini salto deseado
+
+        // Sumar 50 al score
+        score += 50;
+        scoreText.setText('Punts: ' + score); // Actualizar el texto del marcador de puntuación
+    } else {
+        if (vides == 1) {
+            vides--;
+            videsText.setText('Vides: ' + vides);
+            this.physics.pause();
+            player.anims.play('dudedie', true);
+            gameOver = true;
+            setTimeout(function() {
+                window.location.reload(); // Recargar la página después de un tiempo
+            }, 750); // Espera 750 milisegundos antes de recargar la página
+        } else if (vides > 1){
+            vides--;
+            videsText.setText('Vides: ' + vides);
+            player.setX(200);
+            player.setY(300);
+        }
+    }
+}
+})
+
+
+
+var escena2 = new Phaser.Class({
+
+Extends: Phaser.Scene,
+initialize: function() {
+      Phaser.Scene.call(this, { "key": "escena2" });
+},
+init: function() {},
+preload :function(){
+    this.load.image('sky', 'assets/fondocastell.webp');
+    this.load.image('ground', 'assets/plataformapedra.png');
+    this.load.image('alfombra', 'assets/alfombraroja.png');
+    this.load.image('star', 'assets/star.png');
+    this.load.image('porta','assets/portaoberta.png')
+    this.load.spritesheet('dudeidle', 'assets/caballerodescansa.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('dude', 'assets/caballeroanda.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('dudejump', 'assets/caballerosalta.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('dudedie', 'assets/caballeromort.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('dudefight', 'assets/caballeropega.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('snake', 'assets/serpcamina.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('cor', 'assets/cor.png', { frameWidth: 16, frameHeight: 16 });
+
+},
+
+create: function()
+{
+
+    this.timedEvent = this.time.addEvent({
+            delay: 1000, // Cada 1000 milisegundos (1 segundo)
+            callback: this.updateTime, // Llamar a la función de actualización del tiempo
+            callbackScope: this,
+            loop: true // Repetir indefinidamente
+        });
+
+    this.cameras.main.setZoom(1.5); // Establece el zoom al 80% de su tamaño original
+
+    //  A simple background for our game
+    this.add.image(900, 380, 'sky');
+    porta = this.physics.add.sprite(1620, 210, 'porta');
+    porta.setCollideWorldBounds(true);
+    next = () => {
+             this.scene.start('escena1');
+         }
+
+
+    //  The platforms group contains the ground and the 2 ledges we can jump on
+    platforms = this.physics.add.staticGroup();
+
+    //  Here we create the ground.
+    //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
+    // Crea la plataforma y establece su tamaño y posición
+    var platform = platforms.create(900, 630, 'alfombra').setScale(5).refreshBody();
+    // Ajusta el ancho de la plataforma para que cubra toda la pantalla
+    platform.body.width = 2100;
+
+// Ajusta el seguimiento de la cámara para que siga al jugador con un retraso y un borde suave
+
+
+
+    //  Now let's create some ledges
+    platforms.create(630, 330, 'ground');
+    platforms.create(100, 250, 'ground');
+    platforms.create(1200, 400, 'ground');
+    platforms.create(1620, 250, 'ground');
+
+
+    // The player and its settings
+    player = this.physics.add.sprite(100, 450, 'dude');
+    snake = this.physics.add.sprite(200, 200, 'snake');
+    snake2 = this.physics.add.sprite(600, 400, 'snake');
+    snake3 = this.physics.add.sprite(1390, 150, 'snake');
+    snake4 = this.physics.add.sprite(1800, 400, 'snake');
+    snake5 = this.physics.add.sprite(1490, 150, 'snake');
+    cor = this.physics.add.sprite(630, 250, 'cor');
+
+
+// Dentro de tu función create() donde creas el personaje (por ejemplo, player)
+// Ajusta el seguimiento de la cámara para que siga al jugador
+// Establece los límites de la cámara para que no se salga de los bordes del mundo del juego
+
+    // Ajusta el seguimiento de la cámara para que siga al jugador dentro de los límites establecidos
+    //  Player physics properties. Give the little guy a slight bounce.
+    player.body.setSize(20, 55);
+    player.body.setOffset(12, 7);
+    player.setBounce(0.2);
+    player.setCollideWorldBounds(true);
+
+
+
+    snake.body.setSize(20, 35);
+    snake.body.setOffset(5, 30);
+    snake.setBounce(0.2);
+    snake.setCollideWorldBounds(true);
+    serpientesVivas +=1;
+
+    snake2.body.setSize(20, 35);
+    snake2.body.setOffset(5, 30);
+    snake2.setBounce(0.2);
+    snake2.setCollideWorldBounds(true);
+    serpientesVivas +=1;
+
+    snake3.body.setSize(20, 35);
+    snake3.body.setOffset(5, 30);
+    snake3.setBounce(0.2);
+    snake3.setCollideWorldBounds(true);
+    serpientesVivas +=1;
+
+    snake4.body.setSize(20, 35);
+    snake4.body.setOffset(5, 30);
+    snake4.setBounce(0.2);
+    snake4.setCollideWorldBounds(true);
+    serpientesVivas +=1;
+
+    snake5.body.setSize(20, 35);
+    snake5.body.setOffset(5, 30);
+    snake5.setBounce(0.2);
+    snake5.setCollideWorldBounds(true);
+    serpientesVivas +=1;
+
+    cor.body.setSize(20, 20);
+    cor.body.setOffset(5, 20);
+    cor.setCollideWorldBounds(true);
+    
+    //  Our player animations, turning, walking left and walking right.
+    this.anims.create({
+        key: 'left',
+        frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 2 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'turn',
+        frames: [ { key: 'dude', frame: 4 } ],
+        frameRate: 20
+    });
+
+    this.anims.create({
+        key: 'right',
+        frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 2 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'dudefight',
+        frames: this.anims.generateFrameNumbers('dudefight', { start: 0, end: 4 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'dudeidle',
+        frames: this.anims.generateFrameNumbers('dudeidle', { start: 0, end: 7 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'dudejump',
+        frames: this.anims.generateFrameNumbers('dudejump', { start: 0, end: 4 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'dudedie',
+        frames: this.anims.generateFrameNumbers('dudedie', { start: 0, end: 7 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'snakewalk',
+        frames: this.anims.generateFrameNumbers('snake', {start: 0, end: 6}),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'cor',
+        frames: this.anims.generateFrameNumbers('cor', {start: 0, end: 4}),
+        frameRate: 5,
+        repeat: -1
+    });
+
+
+    //  Input Events
+    cursors = this.input.keyboard.createCursorKeys();
+
+    //  Some stars to collect, 12 in total, evenly spaced 70 pixels apart along the x axis
+    stars = this.physics.add.group({
+        key: 'star',
+        repeat: 21,
+        setXY: { x: 12, y: 0, stepX: 70 }
+    });
+
+    stars.children.iterate(function (child) {
+
+        //  Give each star a slightly different bounce
+        child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
+
+    });
+
+    //  The score
+    // Crear el texto del marcador de puntuación (scoreText) y de las vidas (videsText)
+    scoreText = this.add.text(16, 16, 'Punts: 0', { fontSize: '32px', fill: '#f70505' });
+    videsText = this.add.text(this.cameras.main.width - 200, 16, 'Vides: 3', { fontSize: '32px', fill: '#f70505' });
+    tempsText = this.add.text(this.cameras.main.width - 200, 16, 'Temps per matar les serps: 30', { fontSize: '32px', fill: '#f70505' });
+
+    // Asignar el desplazamiento de estos textos para que se muevan con la cámara
+    scoreText.setScrollFactor(0);
+    videsText.setScrollFactor(0);
+    tempsText.setScrollFactor(0);
+
+    //  Collide the player and the stars with the platforms
+    this.physics.add.collider(player, platforms);
+    this.physics.add.collider(snake, platforms);
+    this.physics.add.collider(stars, platforms);
+    this.physics.add.collider(snake2, platforms);
+    this.physics.add.collider(snake3, platforms);
+    this.physics.add.collider(snake4, platforms);
+    this.physics.add.collider(snake5, platforms);
+    this.physics.add.overlap(player, porta, next, null, this);
+    this.physics.add.collider(porta, platforms);
+    this.physics.add.collider(cor, platforms);
+
+
+
+
+    //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
+    this.physics.add.overlap(player, stars, this.collectStar, null, this);
+
+    this.physics.add.collider(player, snake, this.hitPlayer, null, this);
+
+    this.physics.add.collider(player, snake2, this.hitPlayer, null, this);
+
+    this.physics.add.overlap(player, cor, this.collectCor, null, this);
+
+    this.physics.add.collider(player, snake3, this.hitPlayer, null, this);
+
+    this.physics.add.collider(player, snake4, this.hitPlayer, null, this);
+
+    this.physics.add.collider(player, snake5, this.hitPlayer, null, this);
+
+
+        // set bounds so the camera won't go outside the game world
+        this.cameras.main.setBounds(0, 0, game.widthInPixels, game.heightInPixels);        // make the camera follow the player
+        this.cameras.main.startFollow(player, true, 0.5, 0.5, 0, 100);
+
+        // set background color, so the sky is not black
+
+},
+
+// Método para actualizar el tiempo
+updateTime: function() {
+        if (temps > 0) {
+            temps--; // Disminuir el tiempo en 1 segundo
+            tempsText.setText('Temps per matar les serps: ' + temps); // Actualizar el texto del tiempo
+        }
+        else if (temps==0){
+            vides=0;
+            videsText.setText('Vides: ' + vides);
+            this.physics.pause();
+            player.anims.play('dudedie', true);
+            gameOver = true;
+            setTimeout(function() {
+                window.location.reload(); // Recargar la página después de un tiempo
+            }, 750); // Espera 750 milisegundos antes de recargar la página
+        }
+        // Si el tiempo se agota, puedes agregar código adicional aquí
+        // por ejemplo, detener el juego o ejecutar una acción específica
+    },
+
+
+
+update: function()
+{
+    
+    scoreText.x = 320;
+    scoreText.y = 100;
+
+    // VidesText en la parte superior derecha
+    videsText.x = 1380;
+    videsText.y = 100;
+
+    tempsText.x = 650;
+    tempsText.y = 100;
+
+    if(player.x>=1240){
+        this.cameras.main.stopFollow(player.x, true);
+        // Dentro de la función update() o donde desees controlar la cámara
+// Dentro de la función update() o donde desees controlar la cámara
+const cameraCenterX = 1240; // Mantén la posición horizontal actual de la cámara
+const cameraCenterY = player.y - 100; // Sigue al jugador verticalmente
+
+// Ajusta la posición de la cámara solo en el eje Y
+this.cameras.main.scrollY = cameraCenterY - this.cameras.main.height / 2;
+        
+    }else{
+        this.cameras.main.startFollow(player, true, 0.5, 0.5, 0, 100);
+    }
+
+    if (gameOver) {
+    return; // Salir de la función update() después de reproducir la animación 'dudedie'
+}
+
+
+// Manejo de la animación del jugador basado en las teclas presionadas
+
+if (cursors.left.isDown) {
+        player.setVelocityX(-160);
+        player.anims.play('left', true);
+        player.setFlipX(true); // Girar el jugador hacia la izquierda
+    } else if (cursors.right.isDown) {
+        player.setVelocityX(160);
+        player.anims.play('right', true);
+        player.setFlipX(false); // No girar el jugador (mirando hacia la derecha)
+    } 
+// Iniciar la animación de ataque si se presiona la tecla de espacio
+else if (cursors.space.isDown) {
+    player.anims.play('dudefight', true);
+} 
+else {
+    player.setVelocityX(0);
+
+    // Si ninguna tecla de dirección horizontal está presionada y el jugador no está en movimiento vertical, reproducir la animación de inactividad
+    if (!player.body.touching.down) {
+        player.anims.play('turn');
+    } else {
+        player.anims.play('dudeidle', true);
+        cor.anims.play('cor',true);
+    }
+}
+
+// Saltar si se presiona la tecla de dirección hacia arriba y el jugador está en el suelo
+if (cursors.up.isDown && player.body.touching.down) {
+    player.setVelocityY(-450);
+    player.anims.play('dudejump', true);
+}
+
+
+snake.setVelocityX(snakeSpeed);
+snake.anims.play('snakewalk',true);
+if ((snake.body.blocked.left && snakeSpeed < 0) || (snake.x >=290 && snakeSpeed > 0)) {
+    snakeSpeed = -snakeSpeed;
+    
+    snake.setFlipX(!snake.flipX);
+
+}
+
+snake2.setVelocityX(snakeSpeed2);
+snake2.anims.play('snakewalk',true);
+if ((snake2.body.blocked.left && snakeSpeed2 < 0) || (snake2.body.blocked.right && snakeSpeed2 > 0)) {
+    snakeSpeed2 = -snakeSpeed2;
+    
+    snake2.setFlipX(!snake2.flipX);
+
+}
+
+snake3.setVelocityX(snakeSpeed3);
+snake3.anims.play('snakewalk',true);
+// Define el punto de giro de la serpiente en el eje X
+
+// Verifica si la serpiente ha alcanzado el punto de giro en el eje X
+if (snake3.x >= 1400 && snakeSpeed3 > 0) {
+    // Invierte la velocidad de la serpiente en el eje X
+    snakeSpeed3 = -snakeSpeed3;
+
+    // Voltea la animación de la serpiente horizontalmente para que parezca que está girando
+    snake3.setFlipX(!snake3.flipX);
+} else if (snake3.x <= 1020 && snakeSpeed3 < 0) {
+    // Invierte la velocidad de la serpiente en el eje X
+    snakeSpeed3 = -snakeSpeed3;
+
+    // Voltea la animación de la serpiente horizontalmente para que parezca que está girando
+    snake3.setFlipX(!snake3.flipX);
+}
+
+snake4.setVelocityX(snakeSpeed4);
+snake4.anims.play('snakewalk',true);
+if ((snake4.body.blocked.left && snakeSpeed4 < 0) || (snake4.body.blocked.right && snakeSpeed4 > 0)) {
+    snakeSpeed4 = -snakeSpeed4;
+    
+    snake4.setFlipX(!snake4.flipX);
+
+}
+
+snake5.setVelocityX(snakeSpeed5);
+snake5.anims.play('snakewalk',true);
+if ((snake5.x < 1430 && snakeSpeed5 < 0) || (snake5.x > 1800 && snakeSpeed5 > 0)) {
+    snakeSpeed5 = -snakeSpeed5;
+    
+    snake5.setFlipX(!snake5.flipX);
+
+}    
+},
+
+collectCor: function(player, star)
+{
+    cor.disableBody(true, true);
+
+    //  Add and update the score
+    vides+=1;
+    videsText.setText('Vides: ' + vides);
+
+},
+
+
+collectStar:function(player, star)
+{
+    star.disableBody(true, true);
+
+    //  Add and update the score
+    score += 10;
+    scoreText.setText('Punts: ' + score);
+
+
+    
+},
+
+
+// Lógica para manejar la muerte de una serpiente
+serpienteMuerta: function() {
+    serpientesVivas--;
+    console.log(serpientesVivas)
+
+    // Comprobar si todas las serpientes están muertas
+    if (serpientesVivas == 0) {
+        console.log('Todas las serpientes estan muertas');
+
+        this.time.delayedCall(200, function() {
+            window.location.reload();
+                }, [], this);
+        // Lógica adicional después de que todas las serpientes estén muertas
+    }
+},
+
+hitPlayer:function(player, snake) {
+    
+    if (player.y < snake.y) {
+        
+        // Desactivar el cuerpo del demonio después de un breve retraso
+        
+        this.serpienteMuerta();
+        snake.disableBody(true, true);
+        
+        // Realizar un mini salto al eliminar al demonio
+        player.setVelocityY(-200); // Ajustar según la altura del mini salto deseado
+
+        // Sumar 50 al score
+        score += 50;
+        scoreText.setText('Punts: ' + score); // Actualizar el texto del marcador de puntuación
+    } else {
+        if (vides == 1) {
+            vides--;
+            videsText.setText('Vides: ' + vides);
+            this.physics.pause();
+            player.anims.play('dudedie', true);
+            gameOver = true;
+            setTimeout(function() {
+                window.location.reload(); // Recargar la página después de un tiempo
+            }, 750); // Espera 750 milisegundos antes de recargar la página
+        } else if (vides > 1){
+            vides--;
+            videsText.setText('Vides: ' + vides);
+            player.setX(200);
+            player.setY(300);
+        }
+    }
+}
+})
+var config = {
+    type: Phaser.AUTO,
+    parent: 'game',
+    width: 1855,
+    height: 600,
+    scene: [escena2,escena1],
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 600 },
+            debug: false
+        }
+    }
+};
+
+var game = new Phaser.Game(config);
+
+
+</script>
+
+</body>
+</html>
