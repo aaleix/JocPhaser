@@ -36,6 +36,76 @@ var temps = 45;
 var serpientesVivas = 0;
 var cor;
 
+var pantallaInicio = new Phaser.Class ({
+    Extends: Phaser.Scene,
+    initialize: function() {
+      Phaser.Scene.call(this, { "key": "pantallaInicio" });    
+    },
+    preload :function(){
+    this.load.image('inicio', 'assets/caballero_y_castillo.png');
+    
+
+},
+
+create() {
+
+        this.add.image(900, 380, 'inicio').setScale(2.3);
+        // Mostrar el título del juego
+        this.add.text(930, 200, 'Mi Juego', { fontSize: '48px', fill: '#f70505' }).setOrigin(0.5);
+
+        // Mostrar mensaje para empezar a jugar
+        this.add.text(930, 300, 'Presiona cualquier tecla para comenzar', { fontSize: '24px', fill: '#f70505' }).setOrigin(0.5);
+
+        // Detectar cuando se presione cualquier tecla para iniciar el juego
+        this.input.keyboard.once('keydown', () => {
+            this.scene.start('escena1'); // Ir a la escena principal del juego
+        });
+    }
+})
+
+
+var pantallaGameOver = new Phaser.Class ({
+    Extends: Phaser.Scene,
+    initialize: function() {
+      Phaser.Scene.call(this, { "key": "pantallaGameOver" });
+},
+preload :function(){
+    this.load.image('derrota', 'assets/caballeroderrotado.webp');
+},
+
+create() {
+        this.add.image(900, 380, 'derrota').setScale(2);
+        // Mostrar mensaje de "Game Over" y puntuación final
+        this.add.text(930, 200, 'Game Over', { fontSize: '48px', fill: '#f70505' }).setOrigin(0.5);
+        this.add.text(930, 300, 'Puntuación: ' + score, { fontSize: '24px', fill: '#f70505' }).setOrigin(0.5);
+
+        this.time.delayedCall(3000, function() {
+            this.scene.start('pantallaInicio')
+        }, [], this);
+    }
+})
+
+var pantallaVictoria = new Phaser.Class ({
+    Extends: Phaser.Scene,
+    initialize: function() {
+      Phaser.Scene.call(this, { "key": "pantallaVictoria" });
+},
+preload :function(){
+    this.load.image('victoria', 'assets/cofre.png');
+},
+
+create() {
+        this.add.image(900, 380, 'victoria').setScale(1.8);
+        // Mostrar mensaje de "Game Over" y puntuación final
+        this.add.text(900, 200, 'Has guanyat', { fontSize: '48px', fill: '#f70505' }).setOrigin(0.5);
+        this.add.text(900, 300, 'Puntuación: ' + score, { fontSize: '24px', fill: '#f70505' }).setOrigin(0.5);
+
+        this.time.delayedCall(3000, function() {
+            this.scene.start('pantallaInicio')
+        }, [], this);
+    }
+})
+
 var escena1 = new Phaser.Class({
 
 Extends: Phaser.Scene,
@@ -400,9 +470,7 @@ hitPlayer:function(player, snake) {
     if (player.y < snake.y) {
         
         // Desactivar el cuerpo del demonio después de un breve retraso
-        this.time.delayedCall(200, function() {
-            snake.disableBody(true, true);
-        }, [], this);
+        snake.disableBody(true,true);
 
         // Realizar un mini salto al eliminar al demonio
         player.setVelocityY(-200); // Ajustar según la altura del mini salto deseado
@@ -417,9 +485,9 @@ hitPlayer:function(player, snake) {
             this.physics.pause();
             player.anims.play('dudedie', true);
             gameOver = true;
-            setTimeout(function() {
-                window.location.reload(); // Recargar la página después de un tiempo
-            }, 750); // Espera 750 milisegundos antes de recargar la página
+            this.time.delayedCall(750, function() {
+            this.scene.start('pantallaGameOver')
+        }, [], this);
         } else if (vides > 1){
             vides--;
             videsText.setText('Vides: ' + vides);
@@ -444,7 +512,6 @@ preload :function(){
     this.load.image('ground', 'assets/plataformapedra.png');
     this.load.image('alfombra', 'assets/alfombraroja.png');
     this.load.image('star', 'assets/star.png');
-    this.load.image('porta','assets/portaoberta.png')
     this.load.spritesheet('dudeidle', 'assets/caballerodescansa.png', { frameWidth: 64, frameHeight: 64 });
     this.load.spritesheet('dude', 'assets/caballeroanda.png', { frameWidth: 64, frameHeight: 64 });
     this.load.spritesheet('dudejump', 'assets/caballerosalta.png', { frameWidth: 64, frameHeight: 64 });
@@ -469,11 +536,6 @@ create: function()
 
     //  A simple background for our game
     this.add.image(900, 380, 'sky');
-    porta = this.physics.add.sprite(1620, 210, 'porta');
-    porta.setCollideWorldBounds(true);
-    next = () => {
-             this.scene.start('escena1');
-         }
 
 
     //  The platforms group contains the ground and the 2 ledges we can jump on
@@ -637,9 +699,9 @@ create: function()
 
     //  The score
     // Crear el texto del marcador de puntuación (scoreText) y de las vidas (videsText)
-    scoreText = this.add.text(16, 16, 'Punts: 0', { fontSize: '32px', fill: '#f70505' });
-    videsText = this.add.text(this.cameras.main.width - 200, 16, 'Vides: 3', { fontSize: '32px', fill: '#f70505' });
-    tempsText = this.add.text(this.cameras.main.width - 200, 16, 'Temps per matar les serps: 30', { fontSize: '32px', fill: '#f70505' });
+    scoreText = this.add.text(16, 16, 'Punts: '+score, { fontSize: '32px', fill: '#f70505' });
+    videsText = this.add.text(this.cameras.main.width - 200, 16, 'Vides: '+ vides, { fontSize: '32px', fill: '#f70505' });
+    tempsText = this.add.text(this.cameras.main.width - 200, 16, 'Temps per matar les serps: 45', { fontSize: '32px', fill: '#f70505' });
 
     // Asignar el desplazamiento de estos textos para que se muevan con la cámara
     scoreText.setScrollFactor(0);
@@ -654,8 +716,6 @@ create: function()
     this.physics.add.collider(snake3, platforms);
     this.physics.add.collider(snake4, platforms);
     this.physics.add.collider(snake5, platforms);
-    this.physics.add.overlap(player, porta, next, null, this);
-    this.physics.add.collider(porta, platforms);
     this.physics.add.collider(cor, platforms);
 
 
@@ -697,9 +757,9 @@ updateTime: function() {
             this.physics.pause();
             player.anims.play('dudedie', true);
             gameOver = true;
-            setTimeout(function() {
-                window.location.reload(); // Recargar la página después de un tiempo
-            }, 750); // Espera 750 milisegundos antes de recargar la página
+            this.time.delayedCall(750, function() {
+            this.scene.start('pantallaGameOver')
+        }, [], this);
         }
         // Si el tiempo se agota, puedes agregar código adicional aquí
         // por ejemplo, detener el juego o ejecutar una acción específica
@@ -862,10 +922,7 @@ serpienteMuerta: function() {
     if (serpientesVivas == 0) {
         console.log('Todas las serpientes estan muertas');
 
-        this.time.delayedCall(200, function() {
-            window.location.reload();
-                }, [], this);
-        // Lógica adicional después de que todas las serpientes estén muertas
+        this.scene.start('pantallaVictoria');
     }
 },
 
@@ -891,9 +948,9 @@ hitPlayer:function(player, snake) {
             this.physics.pause();
             player.anims.play('dudedie', true);
             gameOver = true;
-            setTimeout(function() {
-                window.location.reload(); // Recargar la página después de un tiempo
-            }, 750); // Espera 750 milisegundos antes de recargar la página
+            this.time.delayedCall(750, function() {
+            this.scene.start('pantallaGameOver')
+        }, [], this);
         } else if (vides > 1){
             vides--;
             videsText.setText('Vides: ' + vides);
@@ -908,7 +965,7 @@ var config = {
     parent: 'game',
     width: 1855,
     height: 600,
-    scene: [escena2,escena1],
+    scene: [pantallaInicio,escena1,escena2, pantallaGameOver, pantallaVictoria],
     physics: {
         default: 'arcade',
         arcade: {
